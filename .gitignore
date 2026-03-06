@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Output data (爬取输出，不提交到仓库)
+arxiv_output/
+arxiv_crawler/arxiv_output/
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
