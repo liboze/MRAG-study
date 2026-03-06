@@ -132,7 +132,7 @@ def cmd_search(args: argparse.Namespace) -> int:
 
     end_date = date.today()
     if start_date > end_date:
-        logger.error("起始日期 %s 不能晚于今天 %s", start_date, end_date)
+        logger.error("起始日期 %s 不能晚于截止日期 %s", start_date, end_date)
         return 1
 
     keywords: List[str] = args.keywords

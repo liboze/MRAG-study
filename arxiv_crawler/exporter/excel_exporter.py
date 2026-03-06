@@ -261,20 +261,35 @@ class ExcelExporter:
 
         for field in TRANSLATABLE_FIELDS:
             texts = [p.get(field, "") for p in papers]
-            logger.info("翻译字段 [%s]…", field)
+            logger.info("翻译字段 [%s]（共 %d 条）…", field, len(texts))
 
-            translated_texts: List[str] = []
-            for text in tqdm(texts, desc=f"翻译 {field}", unit="条"):
-                # 跳过"未提供"等占位符
-                if not text or text == "未提供":
-                    translated_texts.append(text)
-                else:
-                    try:
-                        translated = self.translator.translate(text)  # type: ignore
-                        translated_texts.append(translated)
-                    except Exception as exc:  # pylint: disable=broad-except
-                        logger.warning("翻译失败，保留原文。字段=%s，原因=%s", field, exc)
-                        translated_texts.append(text)
+            # 区分需要翻译的文本和占位符（"未提供"），只翻译有实际内容的条目
+            indices_to_translate = [
+                i for i, t in enumerate(texts) if t and t != "未提供"
+            ]
+            texts_to_translate = [texts[i] for i in indices_to_translate]
+
+            translated_texts: List[str] = list(texts)  # 先复制原文
+
+            if texts_to_translate:
+                try:
+                    # 使用批量翻译接口提升效率（OpenAI 会合并为单次 API 调用）
+                    batch_results = self.translator.translate_batch(  # type: ignore
+                        tqdm(texts_to_translate, desc=f"翻译 {field}", unit="条")
+                        if len(texts_to_translate) > 1
+                        else texts_to_translate
+                    )
+                    for idx, translated in zip(indices_to_translate, batch_results):
+                        translated_texts[idx] = translated or texts[idx]
+                except Exception as exc:  # pylint: disable=broad-except
+                    logger.warning("批量翻译失败，字段=%s，原因=%s", field, exc)
+                    # 回退到逐条翻译
+                    for idx in tqdm(indices_to_translate, desc=f"翻译 {field}(重试)", unit="条"):
+                        try:
+                            result = self.translator.translate(texts[idx])  # type: ignore
+                            translated_texts[idx] = result or texts[idx]
+                        except Exception as inner_exc:  # pylint: disable=broad-except
+                            logger.warning("单条翻译失败，保留原文。原因=%s", inner_exc)
 
             for i, trans_text in enumerate(translated_texts):
                 translated_papers[i][field] = trans_text

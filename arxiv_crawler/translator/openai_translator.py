@@ -100,10 +100,8 @@ class OpenAITranslator(BaseTranslator):
         if not texts:
             return []
 
-        # 将文本用编号分隔符合并，便于 LLM 按序返回
-        numbered_texts = "\n---ITEM_SEP---\n".join(
-            f"[{i + 1}] {t}" for i, t in enumerate(texts)
-        )
+        # 将文本用 [N] 编号拼接，LLM 按序返回带相同编号的译文
+        numbered_texts = "\n".join(f"[{i + 1}] {t}" for i, t in enumerate(texts))
         batch_prompt = (
             f"Please translate each numbered item below into Simplified Chinese. "
             f"Return only the translations, preserving the [N] numbering:\n\n"

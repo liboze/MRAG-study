@@ -64,21 +64,19 @@ class GoogleTranslator(BaseTranslator):
         """
         from deep_translator import GoogleTranslator as _GT  # type: ignore
 
-        # 按句子边界（句号+空格）拆分，尽量保持语义完整
+        # 按字符数硬切分为等长块，保留词边界（在空格处切断）
+        # 比按句子边界更健壮，避免误切缩写词（如 "et al.", "e.g.", "Fig."）
         chunks: List[str] = []
-        current_chunk = ""
-        sentences = text.replace(". ", ".|").split("|")
-
-        for sentence in sentences:
-            if len(current_chunk) + len(sentence) <= self.MAX_CHARS:
-                current_chunk += sentence
-            else:
-                if current_chunk:
-                    chunks.append(current_chunk)
-                current_chunk = sentence
-
-        if current_chunk:
-            chunks.append(current_chunk)
+        while len(text) > self.MAX_CHARS:
+            # 在 MAX_CHARS 附近找最近的空格作为切分点
+            split_pos = text.rfind(" ", 0, self.MAX_CHARS)
+            if split_pos == -1:
+                # 没有空格则强制切分
+                split_pos = self.MAX_CHARS
+            chunks.append(text[:split_pos])
+            text = text[split_pos:].lstrip()
+        if text:
+            chunks.append(text)
 
         translated_parts: List[str] = []
         for chunk in chunks:

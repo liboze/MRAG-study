@@ -4,6 +4,7 @@ arXiv API 爬取模块（模式一：关键词 + 日期范围搜索）
 """
 
 import logging
+import re
 import time
 from datetime import date, datetime
 from typing import Any, Dict, Iterator, List, Optional
@@ -213,8 +214,12 @@ class ArxivAPICrawler:
             for entry in entries:
                 paper = _parse_entry(entry, keywords, crawl_time)
                 # 二次过滤：确保关键词出现在标题或摘要中（API 有时返回不完全匹配结果）
+                # 使用词边界匹配（\b），避免短关键词（如 "AI"）误匹配 "SAID"、"AIM" 等
                 title_abs = (paper["title"] + " " + paper["abstract"]).lower()
-                if any(kw.lower() in title_abs for kw in keywords):
+                if any(
+                    re.search(r"\b" + re.escape(kw.lower()) + r"\b", title_abs)
+                    for kw in keywords
+                ):
                     yield paper
                     fetched += 1
                     if fetched >= max_results:
