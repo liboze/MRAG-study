@@ -1,0 +1,65 @@
+# ============================================================
+# MRAG-study: Autonomous Research Agent — Central Configuration
+# ============================================================
+
+# ─── LLM / Model backend ────────────────────────────────────
+llm:
+  # Supported providers: openai | anthropic | deepseek | local
+  provider: openai
+  model: gpt-4o
+  api_key_env: OPENAI_API_KEY          # env-var that holds the key
+  base_url: ""                          # leave empty to use provider default
+  temperature: 0.3
+  max_tokens: 8192
+  timeout: 120                          # seconds per request
+
+# ─── Search / Literature ────────────────────────────────────
+search:
+  arxiv:
+    max_results: 20
+    sort_by: "relevance"               # relevance | lastUpdatedDate | submittedDate
+  semantic_scholar:
+    api_key_env: SEMANTIC_SCHOLAR_API_KEY
+    max_results: 20
+  serper:                              # for general web search
+    api_key_env: SERPER_API_KEY
+    max_results: 10
+
+# ─── GitHub ──────────────────────────────────────────────────
+github:
+  token_env: GITHUB_TOKEN
+  max_search_results: 10
+  clone_base_dir: "workspace/repos"   # relative to project root
+
+# ─── Skill management ────────────────────────────────────────
+skills:
+  skills_dir: "skills"                # where .py skill scripts live
+  skills_registry: "state/skills.md"
+
+# ─── State / Memory files ────────────────────────────────────
+state:
+  memory_file: "state/memory.md"
+  tasks_file: "state/tasks.md"
+  paper_draft_file: "state/paper_draft.md"
+  log_dir: "logs"
+
+# ─── Experiment / Workspace ──────────────────────────────────
+experiment:
+  workspace_dir: "workspace"
+  results_dir: "workspace/results"
+  max_iterations: 5                   # auto-retry limit per experiment
+  timeout: 3600                       # max seconds per experiment run
+
+# ─── Human-in-the-loop ───────────────────────────────────────
+human_loop:
+  notification_channel: console       # console | email | slack
+  pause_on_auth_required: true
+  pause_on_external_resource: true
+  pause_on_key_decision: true
+
+# ─── Logging ─────────────────────────────────────────────────
+logging:
+  level: INFO                         # DEBUG | INFO | WARNING | ERROR
+  file: "logs/agent.log"
+  max_bytes: 10485760                 # 10 MB
+  backup_count: 5
